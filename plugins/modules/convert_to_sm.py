@@ -1,17 +1,9 @@
 #!/usr/bin/python
-import inspect
-import json
-import logging
-import re
-
-import basyx
-from basyx.aas import model
-from basyx.aas.adapter.json import AASToJsonEncoder
-from basyx.aas.model import Property
-from basyx.aas.model.datatypes import String
 
 # Copyright: (c) 2018, Terry Jones <terry.jones@example.org>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+from __future__ import (absolute_import, division, print_function)
+__metaclass__ = type
 
 DOCUMENTATION = r'''
 ---
@@ -76,10 +68,18 @@ message:
     returned: always
     sample: 'goodbye'
 '''
-__metaclass__ = type
-
-from __future__ import (absolute_import, division, print_function)
 from ansible.module_utils.basic import AnsibleModule
+
+import inspect
+import json
+import logging
+import re
+
+import basyx
+from basyx.aas import model
+from basyx.aas.adapter.json import AASToJsonEncoder
+from basyx.aas.model import Property
+from basyx.aas.model.datatypes import String
 
 logger = logging.getLogger(__name__)
 
