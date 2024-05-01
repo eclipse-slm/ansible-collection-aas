@@ -238,6 +238,7 @@ def convert_to_submodel(sm_id, dictionary):
 
 def run_module():
     module_args = dict(
+        id=str(type='str', required=True),
         facts=dict(type='dict', required=True)
     )
 
@@ -251,7 +252,10 @@ def run_module():
         supports_check_mode=False
     )
 
-    result['submodel'] = convert_to_submodel(module.params['facts'])
+    result['submodel'] = convert_to_submodel(
+        module.params['id'],
+        module.params['facts']
+    )
 
     module.exit_json(**result)
 
