@@ -238,7 +238,7 @@ def convert_to_submodel(sm_id, dictionary):
 
 def run_module():
     module_args = dict(
-        id=str(type='str', required=True),
+        id=dict(type='str', required=True),
         facts=dict(type='dict', required=True)
     )
 
