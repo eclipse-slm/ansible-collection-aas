@@ -5,16 +5,11 @@
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
-import json
-
-from basyx.aas import model
-import basyx.aas.adapter.json
-
-from convert import convert_to_submodel
+from plugins.module_utils.convert import convert_to_submodel
 
 DOCUMENTATION = r'''
 ---
-module: my_test
+module: convert_to_sm
 
 short_description: This is my test module
 
