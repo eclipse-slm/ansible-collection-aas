@@ -1,0 +1,29 @@
+- name: Run docker container
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - community.docker.docker_container:
+        name: facts-container
+        image: python
+        command: sleep infinity
+
+- name: Connect to Container and gather facts
+  hosts: container
+  gather_facts: true
+  tasks:
+    - set_fact:
+        facts: "{{ ansible_facts }}"
+      delegate_to: localhost
+      delegate_facts: true
+
+- name: Remove container and persist facts
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - community.docker.docker_container:
+        name: facts-container
+        state: absent
+
+    - ansible.builtin.copy:
+        content: "{{ facts | to_nice_json }}"
+        dest: "./facts.json"
