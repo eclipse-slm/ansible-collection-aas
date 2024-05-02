@@ -68,7 +68,11 @@ message:
     returned: always
     sample: 'goodbye'
 '''
-from ansible.module_utils.basic import AnsibleModule
+try:
+    from ansible.module_utils.basic import AnsibleModule
+except ModuleNotFoundError as e:
+    print(e)
+    print("Skip import of AnsibleModule (for Testing only)")
 
 import inspect
 import json
@@ -78,7 +82,7 @@ import re
 import basyx
 from basyx.aas import model
 from basyx.aas.adapter.json import AASToJsonEncoder
-from basyx.aas.model import Property
+from basyx.aas.model import Property, AASConstraintViolation
 from basyx.aas.model.datatypes import String
 
 logger = logging.getLogger(__name__)
@@ -130,6 +134,39 @@ def process_dict(element_key, element_value):
     )
 
 
+def convert_submodel_elements_to_string(submodel_elements):
+    casted_submodel_elements = []
+    for se in submodel_elements:
+        casted_submodel_elements.append(
+            process_property(None, str(se.value), '').get_property()
+        )
+
+    return casted_submodel_elements
+
+
+def create_submodel_element_list(id_short, submodel_elements):
+    try:
+        submodel_element_list = model.SubmodelElementList(
+            id_short=id_short,
+            value=submodel_elements,
+            type_value_list_element=type(submodel_elements[0]),
+            value_type_list_element=submodel_elements[0].value_type
+        )
+    except AASConstraintViolation as e:
+        if e.constraint_id == 109:
+            smele = convert_submodel_elements_to_string(submodel_elements)
+            submodel_element_list = model.SubmodelElementList(
+                id_short=id_short,
+                value=smele,
+                type_value_list_element=type(smele[0]),
+                value_type_list_element=smele[0].value_type
+            )
+        else:
+            raise e
+
+    return submodel_element_list
+
+
 def process_list(element_key, element_value):
     logger.debug(f'{inspect.stack()[0][3]}: {element_key}, {element_value}')
     smele = list(process_level(element_value, element_key))
@@ -142,11 +179,9 @@ def process_list(element_key, element_value):
                 type_value_list_element=type(smele[0])
             )
         else:
-            return model.SubmodelElementList(
+            return create_submodel_element_list(
                 id_short=element_key,
-                value=smele,
-                type_value_list_element=type(smele[0]),
-                value_type_list_element=smele[0].value_type
+                submodel_elements=smele
             )
     else:
         return model.SubmodelElementList(
@@ -206,8 +241,12 @@ def process_level(level_elements, level_key):
     if isinstance(level_elements, list):
         for index, element_value in enumerate(level_elements):
             element_key = None
-            submodel_element = process_level_element(element_key, element_value, level_key)
-            if submodel_element is not None:
+            level_element = process_level_element(element_key, element_value, level_key)
+            if level_element is not None:
+                if isinstance(level_element, PropertySetElement):
+                    submodel_element = level_element.get_property()
+                else:
+                    submodel_element = level_element
                 submodel_elements.add(submodel_element)
     # Process Properties / Dicts:
     else:
