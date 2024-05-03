@@ -9,64 +9,49 @@ DOCUMENTATION = r'''
 ---
 module: convert_to_sm
 
-short_description: This is my test module
+short_description: Converts facts to submodel 
 
 # If this is part of a collection, you need to use semantic versioning,
 # i.e. the version is of the form "2.5.0" and not "2.4".
 version_added: "1.0.0"
 
-description: This is my longer description explaining my test module.
+description: The module consumes facts and converts them into an AAS-compatible (Asset Administration Shell) submodel.
 
 options:
-    name:
-        description: This is the message to send to the test module.
+    facts:
+        description: Facts that shall be converted into a submodel
+        required: true
+        type: dict
+    id:
+        description: The id the submodel shall have
         required: true
         type: str
-    new:
-        description:
-            - Control to demo if the result of this module is changed or not.
-            - Parameter description can be a list as well.
-        required: false
-        type: bool
 # Specify this value according to your collection
 # in format of namespace.collection.doc_fragment_name
 # extends_documentation_fragment:
 #     - my_namespace.my_collection.my_doc_fragment_name
 
 author:
-    - Your Name (@yourGitHubHandle)
+    - Benjamin Goetz (@ipa-big)
 '''
 
 EXAMPLES = r'''
 # Pass in a message
-- name: Test with a message
-  my_namespace.my_collection.my_test:
-    name: hello world
+- setup:
 
-# pass in a message and have changed true
-- name: Test with a message and changed output
-  my_namespace.my_collection.my_test:
-    name: hello world
-    new: true
-
-# fail the module
-- name: Test failure of the module
-  my_namespace.my_collection.my_test:
-    name: fail me
+- name: Convert ansible facts to submodel
+  fabos.aas.convert_to_sm:
+    facts: {{ ansible_facts }}
+    id: submodel_id
 '''
 
 RETURN = r'''
 # These are examples of possible return values, and in general should use other names for return values.
-original_message:
-    description: The original name param that was passed in.
-    type: str
+submodel:
+    description: The submodel derived from 'facts' argument.
+    type: dict
     returned: always
     sample: 'hello world'
-message:
-    description: The output message that the test module generates.
-    type: str
-    returned: always
-    sample: 'goodbye'
 '''
 try:
     from ansible.module_utils.basic import AnsibleModule
