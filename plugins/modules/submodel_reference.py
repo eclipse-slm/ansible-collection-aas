@@ -195,10 +195,16 @@ def run_module():
     shell_repo_url = f'{module.params["scheme"]}://{module.params["host"]}:{module.params["port"]}'
     client = ShellRepoClient(shell_repo_url)
 
-    client.add_submodel_reference(
-        shell_id=module.params['shell_id'],
-        submodel_reference=module.params['submodel_reference']
-    )
+    try:
+        status_code, content = client.add_submodel_reference(
+            shell_id=module.params['shell_id'],
+            submodel_reference=module.params['submodel_reference']
+        )
+
+        if status_code == 201:
+            result['changed'] = True
+    except requests.exceptions.ConnectionError as e:
+        module.fail_json(msg=f'Failed to connect to {shell_repo_url}. {e}', **result)
 
     module.exit_json(**result)
 

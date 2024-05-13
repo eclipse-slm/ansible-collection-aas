@@ -148,9 +148,14 @@ def run_module():
     sm_registry_url = f'{module.params["scheme"]}://{module.params["host"]}:{module.params["port"]}'
     client = SmRegistryClient(sm_registry_url)
 
-    client.create_descriptor(
-        submodel_descriptor=module.params['submodel_descriptor']
-    )
+    try:
+        status_code, content = client.create_descriptor(
+            submodel_descriptor=module.params['submodel_descriptor']
+        )
+        if status_code == 201:
+            result['changed'] = True
+    except requests.exceptions.ConnectionError as e:
+        module.fail_json(msg=f'Failed to connect to {sm_registry_url}. {e}', **result)
 
     module.exit_json(**result)
 

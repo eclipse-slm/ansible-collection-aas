@@ -186,10 +186,15 @@ def run_module():
     sm_repo_url = f'{module.params["scheme"]}://{module.params["host"]}:{module.params["port"]}'
     client = SmRepoClient(sm_repo_url)
 
-    client.create(
-        module.params['submodel'],
-        module.params['force']
-    )
+    try:
+        status_code, content = client.create(
+            module.params['submodel'],
+            module.params['force']
+        )
+        if status_code == 201:
+            result['changed'] = True
+    except requests.exceptions.ConnectionError as e:
+        module.fail_json(msg=f'Failed to connect to {sm_repo_url}. {e}', **result)
 
     sm_id = module.params['submodel']['id']
     sm_id_enc = client.get_encrypted_sm_id_from_id(sm_id)
