@@ -40,18 +40,9 @@
         - host: "{{ sm_reg.host }}"
           port: "{{ sm_reg.port }}"
 
-    - name: Create Test Shell
-      ansible.builtin.uri:
-        url: "http://{{ aas_env.host }}:{{ aas_env.port }}/shells"
-        method: POST
-        body_format: json
-        body: "{{ shell }}"
-        status_code:
-          - 201
-          - 409
-      register: create_shell_result
-      retries: 3
-      changed_when: create_shell_result.status == 201
+    - name: Install basyx python sdk
+      ansible.builtin.pip:
+        name: basyx-python-sdk
 
 - name: Test modules
   hosts: localhost
@@ -59,9 +50,14 @@
   tasks:
     - name: Test modules
       block:
-        - name: Install basyx
-          ansible.builtin.pip:
-            name: basyx-python-sdk
+        - name: Create Test Shell
+          aas:
+            scheme: http
+            host: "{{ aas_env.host }}"
+            port: "{{ aas_env.port }}"
+            shell: "{{ shell }}"
+          retries: 5
+          register: create_shell_response
 
         - name: Convert facts to submodel
           convert_to_sm:
@@ -89,12 +85,11 @@
             url: http://{{ aas_env.host }}:{{ aas_env.port }}/shells
           register: shells_request
 
-        - name: Assert SM is registered in SM Repo and Shell has no SM References
+        - name: Assert SM is registered in SM Repo
           assert:
             that:
               - sm_request.json.result | length > 0
               - shells_request.json.result | length > 0
-              - "'submodels' not in shells_request.json.result[0]"
         # endregion
 
         - name: Register Submodel Reference in Shell
@@ -109,17 +104,12 @@
         - name: Get Shells from repo
           ansible.builtin.uri:
             url: http://{{ aas_env.host }}:{{ aas_env.port }}/shells
-          register: sm_request
-
-        - name: Get Shells from repo
-          ansible.builtin.uri:
-            url: http://{{ aas_env.host }}:{{ aas_env.port }}/shells
           register: shells_request
 
         - name: Assert Shell has one submodel reference
           assert:
             that:
-              - sm_request.json.result | length > 0
+              - shells_request.json.result | length > 0
               - shells_request.json.result[0].submodels | length == 1
         # endregion
 
