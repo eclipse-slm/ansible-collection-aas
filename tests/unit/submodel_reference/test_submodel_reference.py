@@ -145,20 +145,7 @@ class UnitTests(unittest.TestCase):
             status_code
         )
 
-    def test_07_get_submodel_references_expect_200_one(self):
-        status_code, content = UnitTests.shell_repo_client.get_submodel_references(UnitTests.test_shell.id)
-
-        self.assertEqual(
-            200,
-            status_code
-        )
-
-        self.assertEqual(
-            1,
-            len(content['result'])
-        )
-
-    def test_08_add_submodel_reference_again_expect_201(self):
+    def test_07_add_submodel_reference_again_expect_200(self):
         status_code, content = UnitTests.shell_repo_client.add_submodel_reference(
             UnitTests.test_shell.id,
             UnitTests.test_sm_ref
@@ -169,7 +156,7 @@ class UnitTests(unittest.TestCase):
             status_code
         )
 
-    def test_09_get_submodel_references_again_expect_200_one(self):
+    def test_08_get_submodel_references_expect_200_one(self):
         status_code, content = UnitTests.shell_repo_client.get_submodel_references(UnitTests.test_shell.id)
 
         self.assertEqual(
@@ -182,7 +169,31 @@ class UnitTests(unittest.TestCase):
             len(content['result'])
         )
 
-    def test_10_get_shell_check_submodel_ref_len_expect_200_one(self):
+    def test_09_add_submodel_reference_again_expect_201(self):
+        status_code, content = UnitTests.shell_repo_client.add_submodel_reference(
+            UnitTests.test_shell.id,
+            UnitTests.test_sm_ref
+        )
+
+        self.assertEqual(
+            200,
+            status_code
+        )
+
+    def test_10_get_submodel_references_again_expect_200_one(self):
+        status_code, content = UnitTests.shell_repo_client.get_submodel_references(UnitTests.test_shell.id)
+
+        self.assertEqual(
+            200,
+            status_code
+        )
+
+        self.assertEqual(
+            1,
+            len(content['result'])
+        )
+
+    def test_11_get_shell_check_submodel_ref_len_expect_200_one(self):
         status_code, content = UnitTests.shell_repo_client.get_shell(UnitTests.test_shell.id)
 
         self.assertEqual(
@@ -197,7 +208,7 @@ class UnitTests(unittest.TestCase):
             len(submodel_refs)
         )
 
-    def test_11_delete_submodel_ref_expect_200(self):
+    def test_12_delete_submodel_ref_expect_200(self):
         sm_id = UnitTests.test_sm_ref.key[0].value
         status_code, content = UnitTests.shell_repo_client.delete_submodel_reference(UnitTests.test_shell.id, sm_id)
 
@@ -206,7 +217,7 @@ class UnitTests(unittest.TestCase):
             status_code
         )
 
-    def test_12_delete_submodel_ref_again_expect_404(self):
+    def test_13_delete_submodel_ref_again_expect_404(self):
         sm_id = UnitTests.test_sm_ref.key[0].value
         status_code, content = UnitTests.shell_repo_client.delete_submodel_reference(UnitTests.test_shell.id, sm_id)
 
@@ -215,7 +226,7 @@ class UnitTests(unittest.TestCase):
             status_code
         )
 
-    def test_13_get_submodel_references_expect_200_none(self):
+    def test_14_get_submodel_references_expect_200_none(self):
         status_code, content = UnitTests.shell_repo_client.get_submodel_references(UnitTests.test_shell.id)
 
         self.assertEqual(

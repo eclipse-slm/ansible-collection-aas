@@ -4,7 +4,6 @@ import time
 import unittest
 
 import requests
-from aas_reg_client import SubmodelDescriptor, Endpoint, ProtocolInformation
 from testcontainers.core.container import DockerContainer
 from testcontainers.core.waiting_utils import wait_for
 
