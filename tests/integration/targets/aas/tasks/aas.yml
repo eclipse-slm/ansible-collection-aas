@@ -1,0 +1,94 @@
+---
+
+- name: Test modules
+  block:
+    - name: Set Vars
+      ansible.builtin.set_fact:
+        shell:
+          id: "shell-id"
+          idShort: "shell-id-short"
+          assetInformation:
+            assetKind: INSTANCE
+            globalAssetId: "global-asset-id"
+
+    - name: Create Test Shell
+      fabos.aas.aas:
+        scheme: http
+        host: "{{ aas_env.host }}"
+        port: "{{ aas_env.port }}"
+        shell: "{{ shell }}"
+      retries: 5
+      register: create_shell_response
+
+    - name: Convert facts to submodel
+      fabos.aas.convert_to_sm:
+        id: test-id
+        facts: "{{ ansible_facts }}"
+      register: convert_result
+
+    - name: Register submodel at repo
+      fabos.aas.submodel:
+        scheme: http
+        host: "{{ aas_env.host }}"
+        port: "{{ aas_env.port }}"
+        submodel: "{{ convert_result.submodel }}"
+        force: true
+      register: register_sm
+
+    # region Assert...
+    - name: Get Submodels from repo
+      ansible.builtin.uri:
+        url: http://{{ aas_env.host }}:{{ aas_env.port }}/submodels
+      register: sm_request
+
+    - name: Get Shells from repo
+      ansible.builtin.uri:
+        url: http://{{ aas_env.host }}:{{ aas_env.port }}/shells
+      register: shells_request
+
+    - name: Assert SM is registered in SM Repo
+      assert:
+        that:
+          - sm_request.json.result | length > 0
+          - shells_request.json.result | length > 0
+    # endregion
+
+    - name: Register Submodel Reference in Shell
+      fabos.aas.submodel_reference:
+        scheme: http
+        host: "{{ aas_env.host }}"
+        port: "{{ aas_env.port }}"
+        submodel_reference: "{{ register_sm.reference }}"
+        shell_id: "{{ shell.id }}"
+
+    # region Assert...
+    - name: Get Shells from repo
+      ansible.builtin.uri:
+        url: http://{{ aas_env.host }}:{{ aas_env.port }}/shells
+      register: shells_request
+
+    - name: Assert Shell has one submodel reference
+      assert:
+        that:
+          - shells_request.json.result | length > 0
+          - shells_request.json.result[0].submodels | length == 1
+    # endregion
+
+    - name: Register Submodel Descriptor at Submodel Registry
+      fabos.aas.submodel_descriptor:
+        scheme: http
+        host: "{{ sm_reg.host }}"
+        port: "{{ sm_reg.port }}"
+        submodel_descriptor: "{{ register_sm.submodel_descriptor }}"
+
+    # region Assert...
+    - name: Get Submodel Descriptors from registry
+      ansible.builtin.uri:
+        url: http://{{ sm_reg.host }}:{{ sm_reg.port }}/submodel-descriptors
+      register: descriptors_request
+
+    - name: Assert Submodel Registry has one Descriptor
+      assert:
+        that:
+          - descriptors_request.json.result | length == 1
+    # endregion

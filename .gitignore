@@ -2,3 +2,4 @@
 .run
 *.iml
 facts.json
+tests/output
