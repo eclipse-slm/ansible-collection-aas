@@ -113,6 +113,7 @@ class PropertySetElement(Property):
 def process_dict(element_key, element_value):
     logger.debug(f'{inspect.stack()[0][3]}: {element_key}, {element_value}')
     smece = process_level(element_value, element_key)
+    element_key = get_id_short(element_key)
     return model.SubmodelElementCollection(
         id_short=element_key,
         value=smece
