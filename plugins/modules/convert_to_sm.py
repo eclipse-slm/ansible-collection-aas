@@ -28,6 +28,14 @@ options:
         description: The id the submodel shall have
         required: true
         type: str
+    parent:
+        description: The parent id 
+        required: false
+        type: str
+    semantic:
+        description: Add a ConceptDescription to the submodel
+        required: true
+        type: str
 # Specify this value according to your collection
 # in format of namespace.collection.doc_fragment_name
 # extends_documentation_fragment:
@@ -254,8 +262,24 @@ def process_level(level_elements, level_key):
     return return_submodel_elements
 
 
-def convert_to_submodel(sm_id, dictionary):
+def convert_to_submodel(sm_id, dictionary, parent=None, semantic=None):
     submodel = model.Submodel(sm_id)
+
+    if parent is not None:
+        submodel.parent = model.ExternalReference(
+            (model.Key(
+                type_=model.KeyTypes.ASSET_ADMINISTRATION_SHELL,
+                value=parent
+            ),)
+        )
+
+    if semantic is not None:
+        submodel.semantic_id = model.ExternalReference(
+            (model.Key(
+                type_=model.KeyTypes.CONCEPT_DESCRIPTION,
+                value=semantic
+            ),)
+        )
 
     submodel.submodel_element = process_level(dictionary, "")
 
@@ -268,30 +292,9 @@ def run_module():
     module_args = dict(
         id=dict(type='str', required=True),
         facts=dict(type='dict', required=True),
-        # parent=dict(type='dict', options=dict(
-        #     keys=dict(type='list', elements='dict', default=list(), options=dict(
-        #         type=dict(type='str')
-        #     ))
-        # )), semantic=dict(type='list', elements='dict', default=None, options=dict(
-        #     type=dict(type='str'),id=dict(type='str', )
-        # )),
+        parent=dict(type='str', default=None),
+        semantic=dict(type='str', default=None),
     )
-
-    semantic_reference = model.ExternalReference(
-        (model.Key(
-            type_=model.KeyTypes.CONCEPT_DESCRIPTION,
-            value='https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#ansible-facts'
-        ),)
-    )
-    r = model.ModelReference.from_referable()
-    m = model.Submodel()
-    # a = model.AssetAdministrationShell()
-    # a.submodel.add(m)
-    #
-    #
-    # ref = model.ModelReference.from_referable(m)
-
-
 
     result = dict(
         changed=False,
@@ -305,7 +308,9 @@ def run_module():
 
     result['submodel'] = convert_to_submodel(
         module.params['id'],
-        module.params['facts']
+        module.params['facts'],
+        module.params['parent'],
+        module.params['semantic']
     )
 
     module.exit_json(**result)

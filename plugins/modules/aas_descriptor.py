@@ -7,37 +7,39 @@ __metaclass__ = type
 
 DOCUMENTATION = r'''
 ---
-module: submodel_descriptor
+module: aas_descriptor
 
-short_description: Registers given submodel descriptor at submodel registry 
+short_description: Registers given shell descriptor at shell registry 
 
 # If this is part of a collection, you need to use semantic versioning,
 # i.e. the version is of the form "2.5.0" and not "2.4".
 version_added: "1.0.0"
 
-description: The module registers a given submodel descriptor at a submodel registry
+description: The module registers a given shell descriptor at a shell registry
 
 options:
     scheme: 
-        description: Scheme of the connection url for the submodel registry
+        description: Scheme of the connection url for the shell registry
         required: true
         type: str
     host: 
-        description: Hostname of the host which runs the submodel registry
+        description: Hostname of the host which runs the shell registry
         required: true
         type: str
     port: 
-        description: Port of the submodel registry
+        description: Port of the shell registry
         required: true
         type: str
     state:
         description: Defines if descriptor shall be created or deleted
         required: true
         type: str
-    submodel_descriptor:
-        description: Submodel Descriptor that shall be registered
-        required: true
+    aas_descriptor:
+        description: shell Descriptor that shall be registered
         type: dict
+    shell_id:
+        description: shell id when descriptor shall be deleted
+        type: str
 # Specify this value according to your collection
 # in format of namespace.collection.doc_fragment_name
 # extends_documentation_fragment:
@@ -49,13 +51,13 @@ author:
 
 EXAMPLES = r'''
 # Pass in a message
-- name: Register Submodel Descriptor
-  fabos.aas.submodel_reference:
+- name: Register shell Descriptor
+  fabos.aas.shell_reference:
     scheme: http
     host: localhost
     port: 8080
     state: present
-    submodel_descriptor: {{ submodel_descriptor }}
+    aas_descriptor: {{ aas_descriptor }}
 '''
 
 RETURN = r''''''
@@ -89,7 +91,7 @@ class SmRegistryClient:
 
     # region CRUD
     def get_descriptors(self):
-        path = '/submodel-descriptors'
+        path = '/shell-descriptors'
 
         return self.return_response(
             requests.get(
@@ -97,8 +99,8 @@ class SmRegistryClient:
             )
         )
 
-    def get_descriptor(self, submodel_id):
-        path = f'/submodel-descriptors/{self.get_encrypted_id(submodel_id)}'
+    def get_descriptor(self, shell_id):
+        path = f'/shell-descriptors/{self.get_encrypted_id(shell_id)}'
 
         return self.return_response(
             requests.get(
@@ -106,18 +108,18 @@ class SmRegistryClient:
             )
         )
 
-    def create_descriptor(self, submodel_descriptor):
-        path = '/submodel-descriptors'
+    def create_descriptor(self, aas_descriptor):
+        path = '/shell-descriptors'
 
         return self.return_response(
             requests.post(
                 url=f'{self.url}{path}',
-                json=submodel_descriptor
+                json=aas_descriptor
             )
         )
 
-    def delete_descriptor(self, submodel_id):
-        path = f'/submodel-descriptors/{self.get_encrypted_id(submodel_id)}'
+    def delete_descriptor(self, shell_id):
+        path = f'/shell-descriptors/{self.get_encrypted_id(shell_id)}'
 
         return self.return_response(
             requests.delete(
@@ -131,9 +133,10 @@ def run_module():
     module_args = dict(
         scheme=dict(type='str', choices=['http', 'https'], default='http'),
         host=dict(type='str', required=True),
-        port=dict(type='str', default='8083'),
+        port=dict(type='str', default='8082'),
         state=dict(type='str', choices=['present', 'absent'], default='present'),
-        submodel_descriptor=dict(type='dict', required=True)
+        shell_id=dict(type='str'),
+        aas_descriptor=dict(type='dict')
     )
 
     result = dict(
@@ -142,18 +145,22 @@ def run_module():
 
     module = AnsibleModule(
         argument_spec=module_args,
-        supports_check_mode=False
+        supports_check_mode=False,
+        required_if=[('state', 'present', ['aas_descriptor']), ('state', 'absent', ['shell_id'])],
     )
 
     sm_registry_url = f'{module.params["scheme"]}://{module.params["host"]}:{module.params["port"]}'
     client = SmRegistryClient(sm_registry_url)
 
     try:
-        status_code, content = client.create_descriptor(
-            submodel_descriptor=module.params['submodel_descriptor']
-        )
-        if status_code == 201:
-            result['changed'] = True
+        if module.params['state'] == 'present':
+            status_code, content = client.create_descriptor(
+                aas_descriptor=module.params['aas_descriptor']
+            )
+            if status_code == 201:
+                result['changed'] = True
+        else:
+            client.delete_descriptor(module.params['shell_id'])
     except requests.exceptions.ConnectionError as e:
         module.fail_json(msg=f'Failed to connect to {sm_registry_url}. {e}', **result)
 
