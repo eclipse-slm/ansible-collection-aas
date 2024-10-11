@@ -2,13 +2,13 @@ version: '3'
 
 services:
   sm-registry:
-    image: eclipsebasyx/submodel-registry-log-mem:2.0.0-milestone-02
+    image: eclipsebasyx/submodel-registry-log-mem:2.0.0-milestone-04
     ports:
       - '8082:8080'
 
 
   aas-env:
-    image: eclipsebasyx/aas-environment:2.0.0-milestone-02
+    image: eclipsebasyx/aas-environment:2.0.0-milestone-04
     ports:
       - '8081:8081'
     environment:

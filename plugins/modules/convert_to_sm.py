@@ -5,6 +5,8 @@
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
+from email.policy import default
+
 DOCUMENTATION = r'''
 ---
 module: convert_to_sm
@@ -254,6 +256,7 @@ def process_level(level_elements, level_key):
 
 def convert_to_submodel(sm_id, dictionary):
     submodel = model.Submodel(sm_id)
+
     submodel.submodel_element = process_level(dictionary, "")
 
     return json.loads(
@@ -264,8 +267,31 @@ def convert_to_submodel(sm_id, dictionary):
 def run_module():
     module_args = dict(
         id=dict(type='str', required=True),
-        facts=dict(type='dict', required=True)
+        facts=dict(type='dict', required=True),
+        # parent=dict(type='dict', options=dict(
+        #     keys=dict(type='list', elements='dict', default=list(), options=dict(
+        #         type=dict(type='str')
+        #     ))
+        # )), semantic=dict(type='list', elements='dict', default=None, options=dict(
+        #     type=dict(type='str'),id=dict(type='str', )
+        # )),
     )
+
+    semantic_reference = model.ExternalReference(
+        (model.Key(
+            type_=model.KeyTypes.CONCEPT_DESCRIPTION,
+            value='https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#ansible-facts'
+        ),)
+    )
+    r = model.ModelReference.from_referable()
+    m = model.Submodel()
+    # a = model.AssetAdministrationShell()
+    # a.submodel.add(m)
+    #
+    #
+    # ref = model.ModelReference.from_referable(m)
+
+
 
     result = dict(
         changed=False,
