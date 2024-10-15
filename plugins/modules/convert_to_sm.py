@@ -50,7 +50,7 @@ EXAMPLES = r'''
 - setup:
 
 - name: Convert ansible facts to submodel
-  fabos.aas.convert_to_sm:
+  slm.aas.convert_to_sm:
     facts: {{ ansible_facts }}
     id: submodel_id
 '''

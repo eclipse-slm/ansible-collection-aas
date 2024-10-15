@@ -12,7 +12,7 @@
             globalAssetId: "global-asset-id"
 
     - name: Create Test Shell
-      fabos.aas.aas:
+      slm.aas.aas:
         scheme: http
         host: "{{ aas_env.host }}"
         port: "{{ aas_env.port }}"
@@ -21,13 +21,13 @@
       register: create_shell_response
 
     - name: Convert facts to submodel
-      fabos.aas.convert_to_sm:
+      slm.aas.convert_to_sm:
         id: test-id
         facts: "{{ ansible_facts }}"
       register: convert_result
 
     - name: Register submodel at repo
-      fabos.aas.submodel:
+      slm.aas.submodel:
         scheme: http
         host: "{{ aas_env.host }}"
         port: "{{ aas_env.port }}"
@@ -54,7 +54,7 @@
     # endregion
 
     - name: Register Submodel Reference in Shell
-      fabos.aas.submodel_reference:
+      slm.aas.submodel_reference:
         scheme: http
         host: "{{ aas_env.host }}"
         port: "{{ aas_env.port }}"
@@ -75,7 +75,7 @@
     # endregion
 
     - name: Register Submodel Descriptor at Submodel Registry
-      fabos.aas.submodel_descriptor:
+      slm.aas.submodel_descriptor:
         scheme: http
         host: "{{ sm_reg.host }}"
         port: "{{ sm_reg.port }}"

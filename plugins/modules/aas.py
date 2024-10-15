@@ -54,7 +54,7 @@ author:
 EXAMPLES = r'''
 # Pass in a message
 - name: Register Shell
-  fabos.aas.submodel_reference:
+  slm.aas.submodel_reference:
     scheme: http
     host: localhost
     port: 8081
@@ -62,7 +62,7 @@ EXAMPLES = r'''
     shell: {{ shell }}
     
 - name: Delete Submodel Reference
-  fabos.aas.submodel_reference:
+  slm.aas.submodel_reference:
     scheme: http
     host: localhost
     port: 8081

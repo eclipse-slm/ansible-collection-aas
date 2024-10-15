@@ -52,7 +52,7 @@ author:
 EXAMPLES = r'''
 # Pass in a message
 - name: Register shell Descriptor
-  fabos.aas.shell_reference:
+  slm.aas.shell_reference:
     scheme: http
     host: localhost
     port: 8080
