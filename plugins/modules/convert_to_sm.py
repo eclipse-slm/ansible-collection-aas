@@ -28,8 +28,8 @@ options:
         description: The id the submodel shall have
         required: true
         type: str
-    parent:
-        description: The parent id 
+    id_short:
+        description: The short id the submodel shall have
         required: false
         type: str
     semantic:
@@ -262,26 +262,21 @@ def process_level(level_elements, level_key):
     return return_submodel_elements
 
 
-def convert_to_submodel(sm_id, dictionary, parent=None, semantic=None):
+def convert_to_submodel(sm_id, facts, semantic=None, sm_id_short=None):
     submodel = model.Submodel(sm_id)
 
-    if parent is not None:
-        submodel.parent = model.ExternalReference(
-            (model.Key(
-                type_=model.KeyTypes.ASSET_ADMINISTRATION_SHELL,
-                value=parent
-            ),)
-        )
+    if sm_id_short is not None:
+        submodel.id_short = sm_id_short
 
     if semantic is not None:
         submodel.semantic_id = model.ExternalReference(
             (model.Key(
-                type_=model.KeyTypes.CONCEPT_DESCRIPTION,
+                type_=model.KeyTypes.GLOBAL_REFERENCE,
                 value=semantic
             ),)
         )
 
-    submodel.submodel_element = process_level(dictionary, "")
+    submodel.submodel_element = process_level(facts, "")
 
     return json.loads(
         json.dumps(submodel, cls=AASToJsonEncoder)
@@ -291,8 +286,8 @@ def convert_to_submodel(sm_id, dictionary, parent=None, semantic=None):
 def run_module():
     module_args = dict(
         id=dict(type='str', required=True),
+        id_short=dict(type='str', required=False),
         facts=dict(type='dict', required=True),
-        parent=dict(type='str', default=None),
         semantic=dict(type='str', default=None),
     )
 
@@ -307,10 +302,10 @@ def run_module():
     )
 
     result['submodel'] = convert_to_submodel(
-        module.params['id'],
-        module.params['facts'],
-        module.params['parent'],
-        module.params['semantic']
+        sm_id=module.params['id'],
+        facts=module.params['facts'],
+        semantic=module.params['semantic'],
+        sm_id_short=module.params['id_short']
     )
 
     module.exit_json(**result)

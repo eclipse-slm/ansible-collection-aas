@@ -43,6 +43,24 @@ class UnitTests(unittest.TestCase):
 
         self.assertEqual(length_facts, length_facts_as_sm)
 
+    # TESTS:
+    def test_convert_ansible_facts_with_parent_and_semantic(self):
+
+        semantic = "https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#ansible-facts"
+        short_id = "short_id"
+        facts_as_sm = convert_to_submodel(self.sm_id, self.facts, semantic, short_id)
+
+        sm_semantic = facts_as_sm['semanticId']
+
+        self.assertEqual(sm_semantic['type'], 'ExternalReference')
+        self.assertEqual(len(sm_semantic['keys']), 1)
+
+        key = sm_semantic['keys'][0]
+        self.assertEqual(key['type'], 'GlobalReference')
+        self.assertEqual(key['value'], semantic)
+
+        self.assertEqual(facts_as_sm['idShort'], short_id)
+
 
 if __name__ == '__main__':
     unittest.main()
