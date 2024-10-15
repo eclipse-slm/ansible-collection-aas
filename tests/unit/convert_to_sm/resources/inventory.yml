@@ -1,0 +1,6 @@
+[container]
+facts-container
+
+[container:vars]
+ansible_connection=community.docker.docker
+ansible_host=facts-container

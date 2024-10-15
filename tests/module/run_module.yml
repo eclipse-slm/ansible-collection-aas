@@ -1,0 +1,139 @@
+- name: Start AAS Env
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Set vars
+      ansible.builtin.set_fact:
+        aas_env:
+          host: host.docker.internal
+          port: 8081
+        sm_reg:
+          host: host.docker.internal
+          port: 8080
+        shell:
+          id: "shell-id"
+          idShort: "shell-id-short"
+          assetInformation:
+            assetKind: INSTANCE
+            globalAssetId: "global-asset-id"
+
+    - name: install docker-compose
+      ansible.builtin.pip:
+        name:
+          - PyYAML==5.3.1
+          - docker==6.1.3
+          - docker-compose==1.29.2
+
+    - name: docker compose up
+      community.docker.docker_compose:
+        state: present
+        project_name: "aas-env"
+        definition: "{{ lookup('file', 'docker-compose.yaml') | from_yaml }}"
+
+    - name: wait for aas services
+      ansible.builtin.wait_for:
+        host: "{{ item.host }}"
+        port: "{{ item.port }}"
+      loop:
+        - host: "{{ aas_env.host }}"
+          port: "{{ aas_env.port }}"
+        - host: "{{ sm_reg.host }}"
+          port: "{{ sm_reg.port }}"
+
+    - name: Install basyx python sdk
+      ansible.builtin.pip:
+        name: basyx-python-sdk
+
+- name: Test modules
+  hosts: localhost
+  gather_facts: yes
+  tasks:
+    - name: Test modules
+      block:
+        - name: Create Test Shell
+          aas:
+            scheme: http
+            host: "{{ aas_env.host }}"
+            port: "{{ aas_env.port }}"
+            shell: "{{ shell }}"
+          retries: 5
+          register: create_shell_response
+
+        - name: Convert facts to submodel
+          convert_to_sm:
+            id: test-id
+            facts: "{{ ansible_facts }}"
+          register: convert_result
+
+        - name: Register submodel at repo
+          submodel:
+            scheme: http
+            host: "{{ aas_env.host }}"
+            port: "{{ aas_env.port }}"
+            submodel: "{{ convert_result.submodel }}"
+            force: true
+          register: register_sm
+
+        # region Assert...
+        - name: Get Submodels from repo
+          ansible.builtin.uri:
+            url: http://{{ aas_env.host }}:{{ aas_env.port }}/submodels
+          register: sm_request
+
+        - name: Get Shells from repo
+          ansible.builtin.uri:
+            url: http://{{ aas_env.host }}:{{ aas_env.port }}/shells
+          register: shells_request
+
+        - name: Assert SM is registered in SM Repo
+          assert:
+            that:
+              - sm_request.json.result | length > 0
+              - shells_request.json.result | length > 0
+        # endregion
+
+        - name: Register Submodel Reference in Shell
+          submodel_reference:
+            scheme: http
+            host: "{{ aas_env.host }}"
+            port: "{{ aas_env.port }}"
+            submodel_reference: "{{ register_sm.reference }}"
+            shell_id: "{{ shell.id }}"
+
+        # region Assert...
+        - name: Get Shells from repo
+          ansible.builtin.uri:
+            url: http://{{ aas_env.host }}:{{ aas_env.port }}/shells
+          register: shells_request
+
+        - name: Assert Shell has one submodel reference
+          assert:
+            that:
+              - shells_request.json.result | length > 0
+              - shells_request.json.result[0].submodels | length == 1
+        # endregion
+
+        - name: Register Submodel Descriptor at Submodel Registry
+          submodel_descriptor:
+            scheme: http
+            host: "{{ sm_reg.host }}"
+            port: "{{ sm_reg.port }}"
+            submodel_descriptor: "{{ register_sm.submodel_descriptor }}"
+
+        # region Assert...
+        - name: Get Submodel Descriptors from registry
+          ansible.builtin.uri:
+            url: http://{{ sm_reg.host }}:{{ sm_reg.port }}/submodel-descriptors
+          register: descriptors_request
+
+        - name: Assert Submodel Registry has one Descriptor
+          assert:
+            that:
+              - descriptors_request.json.result | length == 1
+        # endregion
+      always:
+        - name: docker compose down
+          community.docker.docker_compose:
+            state: absent
+            project_name: "aas-env"
+            definition: "{{ lookup('file', 'docker-compose.yaml') | from_yaml }}"

@@ -1,0 +1,12 @@
+---
+
+- name: Run aas Tests
+  block:
+  - import_tasks: setup.yml
+  - import_tasks: aas.yml
+  always:
+    - name: docker compose down
+      community.docker.docker_compose:
+        state: absent
+        project_name: "aas-env"
+        definition: "{{ lookup('file', 'docker-compose.yaml') | from_yaml }}"
