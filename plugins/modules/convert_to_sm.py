@@ -266,7 +266,7 @@ def convert_to_submodel(sm_id, facts, semantic=None, sm_id_short=None):
     submodel = model.Submodel(sm_id)
 
     if sm_id_short is not None:
-        submodel.id_short = sm_id_short
+        submodel.id_short = get_id_short(sm_id_short)
 
     if semantic is not None:
         submodel.semantic_id = model.ExternalReference(
