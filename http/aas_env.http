@@ -1,0 +1,8 @@
+### Shells
+GET http://{{host}}:{{port}}/shells
+
+### Shell
+GET http://{{host}}:{{port}}/shells/{{shell_id}}
+
+### Shell
+DELETE http://{{host}}:{{port}}/shells/{{shell_id}}
