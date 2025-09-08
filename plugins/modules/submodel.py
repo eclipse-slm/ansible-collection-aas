@@ -168,6 +168,7 @@ def run_module():
         scheme=dict(type='str', choices=['http', 'https'], default='http'),
         host=dict(type='str', required=True),
         port=dict(type='str', default='8081'),
+        path=dict(type='str', default=''),
         submodel=dict(type='dict', required=True),
         force=dict(type='bool', default=True)
     )
@@ -183,7 +184,7 @@ def run_module():
         supports_check_mode=False
     )
 
-    sm_repo_url = f'{module.params["scheme"]}://{module.params["host"]}:{module.params["port"]}'
+    sm_repo_url = f'{module.params["scheme"]}://{module.params["host"]}:{module.params["port"]}{module.params["path"]}'
     client = SmRepoClient(sm_repo_url)
 
     try:
@@ -193,6 +194,8 @@ def run_module():
         )
         if status_code == 201:
             result['changed'] = True
+        else:
+            module.fail_json(msg=f'Failed with status code {status_code} and response content \'{content}\'', **result)
     except requests.exceptions.ConnectionError as e:
         module.fail_json(msg=f'Failed to connect to {sm_repo_url}. {e}', **result)
 

@@ -30,6 +30,11 @@ options:
         description: Port of the shell registry
         required: true
         type: str
+    path: 
+        description: Path of the shell registry
+        required: false
+        type: str
+        default: ''
     state:
         description: Defines if descriptor shall be created or deleted
         required: true
@@ -134,6 +139,7 @@ def run_module():
         scheme=dict(type='str', choices=['http', 'https'], default='http'),
         host=dict(type='str', required=True),
         port=dict(type='str', default='8082'),
+        path=dict(type='str', default=''),
         state=dict(type='str', choices=['present', 'absent'], default='present'),
         shell_id=dict(type='str'),
         aas_descriptor=dict(type='dict')
@@ -149,7 +155,7 @@ def run_module():
         required_if=[('state', 'present', ['aas_descriptor']), ('state', 'absent', ['shell_id'])],
     )
 
-    sm_registry_url = f'{module.params["scheme"]}://{module.params["host"]}:{module.params["port"]}'
+    sm_registry_url = f'{module.params["scheme"]}://{module.params["host"]}:{module.params["port"]}{module.params["path"]}'
     client = SmRegistryClient(sm_registry_url)
 
     try:
@@ -159,6 +165,8 @@ def run_module():
             )
             if status_code == 201:
                 result['changed'] = True
+            else:
+                module.fail_json(msg=f'Failed with status code {status_code} and response content \'{content}\'', **result)
         else:
             client.delete_descriptor(module.params['shell_id'])
     except requests.exceptions.ConnectionError as e:

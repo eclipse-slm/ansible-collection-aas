@@ -30,6 +30,11 @@ options:
         description: Port of the shell repository
         required: true
         type: str
+    path: 
+        description: Path of the shell repository
+        required: false
+        type: str
+        default: ''
     state:
         description: Defines if shell shall be created or deleted
         required: true
@@ -154,6 +159,7 @@ def run_module():
         scheme=dict(type='str', choices=['http', 'https'], default='http'),
         host=dict(type='str', required=True),
         port=dict(type='str', default='8081'),
+        path=dict(type='str', required=False, default=''),
         state=dict(type='str', choices=['present', 'absent'], default='present'),
         shell=dict(type='dict', required=False),
         shell_id=dict(type='str', required=False)
@@ -168,7 +174,7 @@ def run_module():
         supports_check_mode=False
     )
 
-    shell_repo_url = f'{module.params["scheme"]}://{module.params["host"]}:{module.params["port"]}'
+    shell_repo_url = f'{module.params["scheme"]}://{module.params["host"]}:{module.params["port"]}{module.params["path"]}'
     client = ShellRepoClient(shell_repo_url)
 
     try:
@@ -176,8 +182,11 @@ def run_module():
             status_code, content = client.create_shell(
                 shell=module.params['shell']
             )
+
             if status_code == 201:
                 result['changed'] = True
+            else:
+                module.fail_json(msg=f'Failed with status code {status_code} and response content \'{content}\'', **result)
         elif module.params['state'] == 'absent':
             client.delete_shell(
                 shell_id=module.params['shell_id']

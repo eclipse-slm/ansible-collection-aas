@@ -30,6 +30,11 @@ options:
         description: Port of the submodel registry
         required: true
         type: str
+    path: 
+        description: Path of the submodel registry
+        required: false
+        type: str
+        default: ''
     state:
         description: Defines if descriptor shall be created or deleted
         required: true
@@ -132,6 +137,7 @@ def run_module():
         scheme=dict(type='str', choices=['http', 'https'], default='http'),
         host=dict(type='str', required=True),
         port=dict(type='str', default='8083'),
+        path=dict(type='str', default=''),
         state=dict(type='str', choices=['present', 'absent'], default='present'),
         submodel_descriptor=dict(type='dict', required=True)
     )
@@ -154,6 +160,8 @@ def run_module():
         )
         if status_code == 201:
             result['changed'] = True
+        else:
+            module.fail_json(msg=f'Failed with status code {status_code} and response content \'{content}\'', **result)
     except requests.exceptions.ConnectionError as e:
         module.fail_json(msg=f'Failed to connect to {sm_registry_url}. {e}', **result)
 
