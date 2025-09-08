@@ -194,6 +194,8 @@ def run_module():
         )
         if status_code == 201:
             result['changed'] = True
+        elif status_code == 204:
+            result['changed'] = False
         else:
             module.fail_json(msg=f'Failed with status code {status_code} and response content \'{content}\'', **result)
     except requests.exceptions.ConnectionError as e:
