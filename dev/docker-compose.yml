@@ -1,0 +1,22 @@
+# docker compose run --rm --entrypoint /bin/bash dev-container
+# cd tests/module
+# ansible-playbook -v -M /src/plugins/modules run_module.yml
+
+services:
+  dev-container:
+    build:
+      context: ..
+      dockerfile: ./dev/Dockerfile
+    image: dev-container_ansible-collection-aas
+    volumes:
+      - "../:/src"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    extra_hosts:
+      - "slm.local:host-gateway"
+#    networks:
+#      - eclipse-slm_default
+
+#networks:
+#    eclipse-slm_default:
+#        external: true
+

@@ -3,12 +3,12 @@
 The following command is used to test the modules located at "plugins/modules/"
 
 ````shell
-ansible-playbook -M /tmp/roles/plugins/modules run_module.yml
+ansible-playbook -v -M /src/plugins/modules run_module.yml
 ````
 
 ...or:
 
 ````shell
-export ANSIBLE_LIBRARY=/tmp/roles/plugins/modules
-ansible-playbook run_module.yml
+export ANSIBLE_LIBRARY=/src/plugins/modules
+ansible-playbook -v run_module.yml
 ````
